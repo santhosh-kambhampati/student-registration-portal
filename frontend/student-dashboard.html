@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard - EduPortal</title>
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container">
+      <a class="navbar-brand" href="student-dashboard.html">
+        EduPortal
+      </a>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <span class="badge badge-role badge-student">Student</span>
+        <span class="text-secondary small fw-medium d-none d-md-inline" id="navStudentEmail">Loading...</span>
+        <button class="btn btn-outline-danger btn-sm px-3" id="logoutBtn">
+          <i class="bi bi-box-arrow-right me-1"></i> Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="container py-4">
+
+    <!-- Global Alert Feedback -->
+    <div id="globalAlert" class="alert d-none mb-4" role="alert"></div>
+
+    <!-- Welcome Banner (Exact requirement format) -->
+    <section class="welcome-banner text-white p-4 p-md-5 mb-4 rounded-3 shadow-sm">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <span class="badge bg-white bg-opacity-25 text-white px-3 py-1 rounded-pill mb-2">
+            <i class="bi bi-person-check-fill me-1"></i> Student Portal
+          </span>
+          <h2 class="fw-bold mb-2" id="welcomeHeading">Welcome, Loading... (User ID: #...)</h2>
+          <p class="mb-0 opacity-90 small">Here is your enrolled profile and academic information.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+          <button class="btn btn-light text-primary fw-semibold px-4 shadow-sm" id="openEditProfileBtn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+            <i class="bi bi-pencil-square me-1"></i> Edit Profile
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile Details Grid -->
+    <div class="row g-4">
+      
+      <!-- Academic & Personal Info Card -->
+      <div class="col-lg-8">
+        <div class="card card-custom h-100">
+          <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+            <h5 class="fw-bold mb-0 text-primary">
+              <i class="bi bi-person-vcard me-2"></i>Profile Information
+            </h5>
+            <span class="badge bg-light text-dark border">
+              <i class="bi bi-clock-history me-1"></i> Last updated: <span id="lastUpdatedText">-</span>
+            </span>
+          </div>
+
+          <div class="card-body p-4">
+            <div class="row g-3">
+
+              <!-- Full Name (Read-Only) -->
+              <div class="col-sm-6">
+                <label class="text-muted small fw-semibold d-block">Full Name</label>
+                <div class="p-2 bg-light rounded border fw-medium d-flex justify-content-between align-items-center">
+                  <span id="displayFullName">-</span>
+                  <span class="badge badge-locked"><i class="bi bi-lock-fill"></i> Locked</span>
+                </div>
+              </div>
+
+              <!-- Email (Read-Only / Locked) -->
+              <div class="col-sm-6">
+                <label class="text-muted small fw-semibold d-block">Email Address</label>
+                <div class="p-2 bg-light rounded border fw-medium d-flex justify-content-between align-items-center">
+                  <span id="displayEmail">-</span>
+                  <span class="badge badge-locked"><i class="bi bi-lock-fill"></i> Locked</span>
+                </div>
+              </div>
+
+              <!-- Student ID (Read-Only) -->
+              <div class="col-sm-6">
+                <label class="text-muted small fw-semibold d-block">Student ID</label>
+                <div class="p-2 bg-light rounded border fw-medium d-flex justify-content-between align-items-center">
+                  <span id="displayUserId" class="text-primary fw-bold">-</span>
+                  <span class="badge badge-locked"><i class="bi bi-lock-fill"></i> Locked</span>
+                </div>
+              </div>
+
+              <!-- Date of Birth -->
+              <div class="col-sm-6">
+                <label class="text-muted small fw-semibold d-block">Date of Birth</label>
+                <div class="p-2 bg-white rounded border fw-medium" id="displayDob">-</div>
+              </div>
+
+              <!-- Gender -->
+              <div class="col-sm-6">
+                <label class="text-muted small fw-semibold d-block">Gender</label>
+                <div class="p-2 bg-white rounded border fw-medium" id="displayGender">-</div>
+              </div>
+
+              <!-- Qualification -->
+              <div class="col-sm-6">
+                <label class="text-muted small fw-semibold d-block">Qualification</label>
+                <div class="p-2 bg-white rounded border fw-medium" id="displayQualification">-</div>
+              </div>
+
+              <!-- Interests -->
+              <div class="col-12">
+                <label class="text-muted small fw-semibold d-block">Interests</label>
+                <div class="p-2 bg-white rounded border" id="displayInterestsWrapper">
+                  <span id="displayInterests">-</span>
+                </div>
+              </div>
+
+              <!-- Class -->
+              <div class="col-sm-4">
+                <label class="text-muted small fw-semibold d-block">Class</label>
+                <div class="p-2 bg-white rounded border fw-medium" id="displayClass">-</div>
+              </div>
+
+              <!-- Subject -->
+              <div class="col-sm-5">
+                <label class="text-muted small fw-semibold d-block">Subject</label>
+                <div class="p-2 bg-white rounded border fw-medium" id="displaySubject">-</div>
+              </div>
+
+              <!-- Marks -->
+              <div class="col-sm-3">
+                <label class="text-muted small fw-semibold d-block">Marks</label>
+                <div class="p-2 bg-white rounded border fw-bold text-success" id="displayMarks">-</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aadhaar Document Card -->
+      <div class="col-lg-4">
+        <div class="card card-custom h-100">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="fw-bold mb-0 text-primary">
+              <i class="bi bi-file-earmark-pdf me-2"></i>Aadhaar Document
+            </h5>
+          </div>
+          <div class="card-body p-4 text-center d-flex flex-column justify-content-between">
+            <div>
+              <div class="stat-icon bg-danger bg-opacity-10 text-danger mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+                <i class="bi bi-file-earmark-pdf-fill"></i>
+              </div>
+              <h6 class="fw-bold mb-1">Aadhaar Card (PDF)</h6>
+              <p class="text-muted small mb-3">Stored securely under protected storage</p>
+              
+              <div class="p-2 bg-light rounded border small text-break mb-4">
+                <i class="bi bi-shield-check text-success me-1"></i> Verified & Uploaded
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <a href="/api/student/aadhaar" target="_blank" class="btn btn-primary" id="viewAadhaarBtn">
+                <i class="bi bi-eye me-1"></i> View Aadhaar PDF
+              </a>
+              <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#replaceAadhaarModal">
+                <i class="bi bi-arrow-repeat me-1"></i> Replace Document
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="editProfileModalLabel">
+            <i class="bi bi-pencil-square text-primary me-2"></i>Edit Student Profile
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <form id="editProfileForm" novalidate>
+          <div class="modal-body p-4">
+            <div id="modalAlertBox" class="alert d-none mb-3" role="alert"></div>
+
+            <!-- Locked Fields Info Alert -->
+            <div class="alert alert-secondary py-2 small mb-3">
+              <i class="bi bi-lock-fill me-1"></i> Note: <strong>Name</strong>, <strong>Email</strong>, and <strong>User ID</strong> are locked and cannot be changed.
+            </div>
+
+            <div class="row g-3">
+              <!-- Name (Locked) -->
+              <div class="col-md-6">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="modalLockedName" readonly disabled>
+              </div>
+
+              <!-- Email (Locked) -->
+              <div class="col-md-6">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="modalLockedEmail" readonly disabled>
+              </div>
+
+              <!-- Date of Birth -->
+              <div class="col-md-6">
+                <label for="modalDob" class="form-label">Date of Birth <span class="required">*</span></label>
+                <input type="date" class="form-control" id="modalDob" required>
+              </div>
+
+              <!-- Gender -->
+              <div class="col-md-6">
+                <label for="modalGender" class="form-label">Gender <span class="required">*</span></label>
+                <select class="form-select" id="modalGender" required>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <!-- Qualification -->
+              <div class="col-md-12">
+                <label for="modalQualification" class="form-label">Qualification <span class="required">*</span></label>
+                <select class="form-select" id="modalQualification" required>
+                  <option value="High School">High School</option>
+                  <option value="Bachelor's">Bachelor's</option>
+                  <option value="Master's">Master's</option>
+                </select>
+              </div>
+
+              <!-- Interests -->
+              <div class="col-12">
+                <label class="form-label d-block">Interests <span class="required">*</span></label>
+                <div class="d-flex flex-wrap gap-4 pt-1">
+                  <div class="form-check">
+                    <input class="form-check-input modal-interest-cb" type="checkbox" value="Coding" id="mInterestCoding">
+                    <label class="form-check-label" for="mInterestCoding">Coding</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input modal-interest-cb" type="checkbox" value="Design" id="mInterestDesign">
+                    <label class="form-check-label" for="mInterestDesign">Design</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input modal-interest-cb" type="checkbox" value="Gaming" id="mInterestGaming">
+                    <label class="form-check-label" for="mInterestGaming">Gaming</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input modal-interest-cb" type="checkbox" value="Sports" id="mInterestSports">
+                    <label class="form-check-label" for="mInterestSports">Sports</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Class, Subject, Marks -->
+              <div class="col-md-4">
+                <label for="modalClass" class="form-label">Class <span class="required">*</span></label>
+                <input type="text" class="form-control" id="modalClass" required>
+              </div>
+
+              <div class="col-md-5">
+                <label for="modalSubject" class="form-label">Subject <span class="required">*</span></label>
+                <input type="text" class="form-control" id="modalSubject" required>
+              </div>
+
+              <div class="col-md-3">
+                <label for="modalMarks" class="form-label">Marks (0-100) <span class="required">*</span></label>
+                <input type="number" class="form-control" id="modalMarks" min="0" max="100" step="0.1" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+              <span class="spinner-border spinner-border-sm me-2 d-none" id="saveProfileSpinner"></span>
+              <span id="saveProfileBtnText"><i class="bi bi-save me-1"></i> Save Changes</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Replace Aadhaar Modal -->
+  <div class="modal fade" id="replaceAadhaarModal" tabindex="-1" aria-labelledby="replaceAadhaarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="replaceAadhaarModalLabel">
+            <i class="bi bi-file-earmark-pdf text-danger me-2"></i>Replace Aadhaar PDF
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <form id="replaceAadhaarForm" novalidate enctype="multipart/form-data">
+          <div class="modal-body p-4">
+            <div id="replaceAlertBox" class="alert d-none mb-3" role="alert"></div>
+
+            <div class="mb-3">
+              <label for="newAadhaarFile" class="form-label">Select New PDF File <span class="required">*</span></label>
+              <input type="file" class="form-control" id="newAadhaarFile" name="aadhaar" accept=".pdf,application/pdf" required>
+              <div class="form-text text-muted">
+                Only PDF files are allowed. Maximum file size: 5 MB.
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="uploadAadhaarBtn">
+              <span class="spinner-border spinner-border-sm me-2 d-none" id="uploadAadhaarSpinner"></span>
+              <span id="uploadAadhaarBtnText"><i class="bi bi-upload me-1"></i> Upload & Replace</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center mt-auto">
+    <div class="container">
+      <p class="mb-0">&copy; 2026 EduPortal. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/student-dashboard.js"></script>
+</body>
+</html>

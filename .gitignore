@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+package-lock.json.bak
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploaded documents (Aadhaar PDFs are sensitive)
+uploads/
+backend/uploads/**
+!backend/uploads/
+!backend/uploads/aadhaar/
+!backend/uploads/aadhaar/.gitkeep
+*.pdf
+
+# Database dumps containing sensitive user data
+*.dump
+*.dump.sql
+*.sql.bak
+*.backup
+
+# IDE and Editor configuration
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary directories
+tmp/
+temp/
+.cache/

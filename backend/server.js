@@ -117,6 +117,45 @@ app.use((err, req, res, next) => {
 });
 
 /**
+ * Ensure database schema (students table) is created if not exists
+ */
+async function ensureSchema() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS students (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id VARCHAR(50) NOT NULL UNIQUE,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(150) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        date_of_birth DATE NOT NULL,
+        gender ENUM('Male', 'Female', 'Other') NOT NULL,
+        qualification VARCHAR(100) NOT NULL,
+        interests VARCHAR(255) NOT NULL,
+        class VARCHAR(50) NOT NULL,
+        subject VARCHAR(100) NOT NULL,
+        marks DECIMAL(5,2) NOT NULL,
+        aadhaar_file VARCHAR(255) NULL,
+        role ENUM('student', 'admin') NOT NULL DEFAULT 'student',
+        reset_token VARCHAR(255) NULL,
+        reset_token_expiry DATETIME NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_email (email),
+        INDEX idx_user_id (user_id),
+        INDEX idx_name (name),
+        INDEX idx_class (class),
+        INDEX idx_dob (date_of_birth),
+        INDEX idx_role (role)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+    console.log('[DB] Schema verified/initialized.');
+  } catch (error) {
+    console.error('[DB] Schema initialization error:', error.message);
+  }
+}
+
+/**
  * Ensure default development admin account is present in database
  */
 async function ensureAdminAccount() {
@@ -164,12 +203,13 @@ async function ensureAdminAccount() {
 testConnection()
   .then(async () => {
     console.log('[DB] Connected to MySQL database successfully.');
+    await ensureSchema();
     await ensureAdminAccount();
 
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`=======================================================`);
-      console.log(` Student Portal Server running on http://localhost:${PORT}`);
-      console.log(` Frontend accessible at http://localhost:${PORT}`);
+      console.log(` Student Portal Server running on http://0.0.0.0:${PORT}`);
+      console.log(` Frontend accessible at http://0.0.0.0:${PORT}`);
       console.log(`=======================================================`);
     });
   })

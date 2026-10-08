@@ -4,6 +4,12 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 // Also fallback to root .env if not found
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
+const isSslRequired =
+  process.env.DB_SSL === 'true' ||
+  process.env.MYSQL_SSL === 'true' ||
+  (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com')) ||
+  String(process.env.DB_PORT) === '4000';
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST || process.env.MYSQLHOST || '127.0.0.1',
   port: parseInt(process.env.DB_PORT || process.env.MYSQLPORT, 10) || 3306,
@@ -15,7 +21,13 @@ const pool = mysql.createPool({
   queueLimit: 0,
   timezone: '+00:00',
   dateStrings: true,
-  ssl: (process.env.DB_SSL === 'true' || process.env.MYSQL_SSL === 'true') ? { rejectUnauthorized: false } : undefined
+  enableKeepAlive: true,
+  ssl: isSslRequired
+    ? {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+      }
+    : undefined
 });
 
 async function testConnection() {

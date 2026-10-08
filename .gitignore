@@ -41,3 +41,5 @@ backend/uploads/**
 tmp/
 temp/
 .cache/
+.vercel
+.env*

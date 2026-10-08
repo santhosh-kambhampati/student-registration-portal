@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { pool } = require('../config/db');
 const { UPLOADS_DIR, safeDeleteFile } = require('../utils/file.utils');
+const { saveAadhaarDocument, streamAadhaarDocument, deleteAadhaarDocument } = require('../utils/storage.utils');
 
 /**
  * Get current authenticated student profile
@@ -178,13 +179,13 @@ async function uploadAadhaar(req, res) {
     const [rows] = await pool.query('SELECT aadhaar_file FROM students WHERE id = ?', [studentId]);
     const oldFileName = rows.length > 0 ? rows[0].aadhaar_file : null;
 
-    const newFileName = req.file.filename;
+    const { filename: newFileName } = await saveAadhaarDocument(req.file.buffer, req.file.originalname);
 
     await pool.query('UPDATE students SET aadhaar_file = ? WHERE id = ?', [newFileName, studentId]);
 
     // Safely remove old file if it exists and is different
     if (oldFileName && oldFileName !== newFileName) {
-      safeDeleteFile(oldFileName);
+      await deleteAadhaarDocument(oldFileName);
     }
 
     return res.json({
@@ -193,9 +194,6 @@ async function uploadAadhaar(req, res) {
       aadhaar_file: newFileName
     });
   } catch (error) {
-    if (req.file) {
-      safeDeleteFile(req.file.path);
-    }
     console.error('Error uploading Aadhaar:', error);
     return res.status(500).json({
       success: false,
@@ -223,18 +221,7 @@ async function getAadhaar(req, res) {
     }
 
     const fileName = rows[0].aadhaar_file;
-    const filePath = path.join(UPLOADS_DIR, fileName);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: 'Aadhaar document file not found on server.'
-      });
-    }
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="aadhaar-${rows[0].user_id}.pdf"`);
-    return res.sendFile(filePath);
+    return streamAadhaarDocument(fileName, res, `aadhaar-${rows[0].user_id}.pdf`);
   } catch (error) {
     console.error('Error fetching Aadhaar file:', error);
     return res.status(500).json({

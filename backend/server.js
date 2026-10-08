@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -57,15 +58,23 @@ app.use(
   })
 );
 
-// Express Session configuration
+// Express Session configuration with MySQL session store
 const sessionSecret = process.env.SESSION_SECRET || 'student_portal_default_secret_key_2026';
 if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'student_portal_default_secret_key_2026')) {
   console.warn('[SECURITY WARNING] Running in production with default SESSION_SECRET. Set a unique SESSION_SECRET in environment variables.');
 }
 
+const sessionStore = new MySQLStore({
+  clearExpired: true,
+  checkExpirationInterval: 900000, // 15 mins
+  expiration: 86400000, // 24 hours
+  createDatabaseTable: true
+}, pool);
+
 const isCrossDomainProd = process.env.NODE_ENV === 'production' && frontendUrls.length > 0;
 app.use(
   session({
+    store: sessionStore,
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
@@ -199,23 +208,47 @@ async function ensureAdminAccount() {
   }
 }
 
-// Start Server after database validation
-testConnection()
-  .then(async () => {
-    console.log('[DB] Connected to MySQL database successfully.');
-    await ensureSchema();
-    await ensureAdminAccount();
+let initPromise = null;
+async function ensureInit() {
+  if (!initPromise) {
+    initPromise = (async () => {
+      await ensureSchema();
+      await ensureAdminAccount();
+    })();
+  }
+  return initPromise;
+}
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`=======================================================`);
-      console.log(` Student Portal Server running on http://0.0.0.0:${PORT}`);
-      console.log(` Frontend accessible at http://0.0.0.0:${PORT}`);
-      console.log(`=======================================================`);
+// Ensure database schema and admin account in serverless environments
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api') && req.path !== '/api/health') {
+    try {
+      await ensureInit();
+    } catch (err) {
+      console.error('[INIT] Error ensuring database initialization:', err.message);
+    }
+  }
+  next();
+});
+
+// Start standalone HTTP Server only when run directly (local development and tests)
+if (require.main === module) {
+  testConnection()
+    .then(async () => {
+      console.log('[DB] Connected to MySQL database successfully.');
+      await ensureInit();
+
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`=======================================================`);
+        console.log(` Student Portal Server running on http://0.0.0.0:${PORT}`);
+        console.log(` Frontend accessible at http://0.0.0.0:${PORT}`);
+        console.log(`=======================================================`);
+      });
+    })
+    .catch((err) => {
+      console.error('[DB] Database connection error. Failed to start server:', err);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.error('[DB] Database connection error. Failed to start server:', err);
-    process.exit(1);
-  });
+}
 
 module.exports = app;

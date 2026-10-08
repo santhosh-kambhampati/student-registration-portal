@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { pool } = require('../config/db');
 const { UPLOADS_DIR, safeDeleteFile } = require('../utils/file.utils');
+const { saveAadhaarDocument, streamAadhaarDocument, deleteAadhaarDocument } = require('../utils/storage.utils');
 
 /**
  * Get all students with dynamic filtering and calculated age
@@ -224,7 +225,8 @@ async function updateStudent(req, res) {
 
     let updatedAadhaarFile = currentStudent.aadhaar_file;
     if (req.file) {
-      updatedAadhaarFile = req.file.filename;
+      const { filename: newAadhaar } = await saveAadhaarDocument(req.file.buffer, req.file.originalname);
+      updatedAadhaarFile = newAadhaar;
     }
 
     // Name, Email, and user_id are strictly excluded from update
@@ -254,7 +256,7 @@ async function updateStudent(req, res) {
 
     // If new file was uploaded, remove old file
     if (req.file && currentStudent.aadhaar_file && currentStudent.aadhaar_file !== updatedAadhaarFile) {
-      safeDeleteFile(currentStudent.aadhaar_file);
+      await deleteAadhaarDocument(currentStudent.aadhaar_file);
     }
 
     const [updatedRows] = await pool.query(
@@ -274,7 +276,6 @@ async function updateStudent(req, res) {
       student: updatedRows[0]
     });
   } catch (error) {
-    if (req.file) safeDeleteFile(req.file.path);
     console.error('Error updating student by admin:', error);
     return res.status(500).json({
       success: false,
@@ -309,7 +310,7 @@ async function deleteStudent(req, res) {
 
     // Safely delete associated Aadhaar document
     if (student.aadhaar_file) {
-      safeDeleteFile(student.aadhaar_file);
+      await deleteAadhaarDocument(student.aadhaar_file);
     }
 
     return res.json({
@@ -345,18 +346,7 @@ async function getStudentAadhaar(req, res) {
     }
 
     const student = rows[0];
-    const filePath = path.join(UPLOADS_DIR, student.aadhaar_file);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: 'Aadhaar document file not found on disk.'
-      });
-    }
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="aadhaar-${student.user_id}.pdf"`);
-    return res.sendFile(filePath);
+    return streamAadhaarDocument(student.aadhaar_file, res, `aadhaar-${student.user_id}.pdf`);
   } catch (error) {
     console.error('Error streaming student Aadhaar file to admin:', error);
     return res.status(500).json({

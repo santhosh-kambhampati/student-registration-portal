@@ -1,16 +1,8 @@
 const multer = require('multer');
 const path = require('path');
-const { UPLOADS_DIR, generateUniquePdfName, isPdfMagicBytes, safeDeleteFile } = require('../utils/file.utils');
+const { isPdfBufferValid } = require('../utils/storage.utils');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOADS_DIR);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = generateUniquePdfName();
-    cb(null, uniqueName);
-  }
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
@@ -36,7 +28,7 @@ const upload = multer({
 
 /**
  * Middleware wrapper to handle multer errors gracefully
- * and verify PDF signature / magic bytes.
+ * and verify PDF signature / magic bytes in memory.
  */
 function handleAadhaarUpload(fieldName = 'aadhaar', isRequired = true) {
   const multerSingle = upload.single(fieldName);
@@ -69,11 +61,10 @@ function handleAadhaarUpload(fieldName = 'aadhaar', isRequired = true) {
         });
       }
 
-      // If file was uploaded, verify magic bytes
+      // If file was uploaded, verify magic bytes (%PDF-) from buffer
       if (req.file) {
-        const isPdfValid = await isPdfMagicBytes(req.file.path);
+        const isPdfValid = isPdfBufferValid(req.file.buffer);
         if (!isPdfValid) {
-          safeDeleteFile(req.file.path);
           delete req.file;
           return res.status(400).json({
             success: false,

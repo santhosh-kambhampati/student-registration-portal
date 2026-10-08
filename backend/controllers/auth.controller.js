@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { pool } = require('../config/db');
 const { safeDeleteFile } = require('../utils/file.utils');
+const { saveAadhaarDocument, deleteAadhaarDocument } = require('../utils/storage.utils');
 
 /**
  * Generate next formatted student user ID (e.g. STU001, STU002)
@@ -159,7 +160,7 @@ async function register(req, res) {
       await connection.beginTransaction();
 
       const studentUserId = await generateNextStudentId(connection);
-      const aadhaarFileName = req.file.filename;
+      const { filename: aadhaarFileName } = await saveAadhaarDocument(req.file.buffer, req.file.originalname);
 
       const [result] = await connection.query(
         `INSERT INTO students (
